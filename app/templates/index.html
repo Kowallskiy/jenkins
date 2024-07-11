@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Audio Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #console {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 200px;
+            overflow-y: scroll;
+        }
+        .log {
+            margin: 0;
+            padding: 5px;
+        }
+        .log.real {
+            color: green;
+        }
+        .log.fake {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fake Audio Detection</h1>
+    <button id="startButton">Start Detection</button>
+    <button id="stopButton" disabled>Stop Detection</button>
+    <div id="console"></div>
+
+    <script>
+        let isDetecting = false;
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const consoleDiv = document.getElementById('console');
+        let websocket = null;
+
+        function logMessage(message, type) {
+            const log = document.createElement('p');
+            log.className = `log ${type}`;
+            log.textContent = message;
+            consoleDiv.appendChild(log);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        async function startDetection() {
+            if (isDetecting) {
+                logMessage('Detection is already running...', 'info');
+                return;
+            }
+            isDetecting = true;
+            logMessage('Starting detection...', 'info');
+            startButton.disabled = true;
+            stopButton.disabled = false;
+
+            try {
+                const response = await fetch('http://localhost:8000/start_detection', {
+                    method: 'POST',
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                logMessage(`Detection started: ${result.status}`, 'info');
+
+                websocket = new WebSocket('ws://localhost:8000/ws');
+                websocket.onmessage = function(event) {
+                    const data = event.data;
+                    logMessage(`Detected ${data} audio`, data);
+                };
+                websocket.onclose = function() {
+                    logMessage('WebSocket connection closed', 'info');
+                };
+            } catch (error) {
+                logMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopDetection() {
+            if (!isDetecting) {
+                logMessage('Detection is not running...', 'info');
+                return;
+            }
+            isDetecting = false;
+            logMessage('Stopping detection...', 'info');
+            startButton.disabled = false;
+            stopButton.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/stop_detection', {
+                    method: 'POST',
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                logMessage(`Detection stopped: ${result.status}`, 'info');
+
+                if (websocket) {
+                    websocket.close();
+                    websocket = null;
+                }
+            } catch (error) {
+                logMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        startButton.addEventListener('click', startDetection);
+        stopButton.addEventListener('click', stopDetection);
+    </script>
+</body>
+</html>
+
+

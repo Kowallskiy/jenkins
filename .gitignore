@@ -1,0 +1,12 @@
+.pytest_cache/
+asr_bengali_0/
+autovc/
+fake/
+original/
+scripts/
+venv/
+AutoVC.ipynb
+audio_files/
+tabular_dataset.csv
+train_documented.ipynb
+train.ipynb
