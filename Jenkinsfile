@@ -11,6 +11,14 @@ pipeline {
                 git url: 'https://github.com/Kowallskiy/jenkins', branch: 'main'
             }
         }
+        stage('Verify the Environment') {
+            steps {
+                echo 'Start verifying...'
+                bat 'python --version'
+                bat 'pip --version'
+                echo 'Finished verifying.'
+            }
+        }
         stage('Install Dependencies') {
             steps {
                 bat 'pip install -r requirements.txt'
