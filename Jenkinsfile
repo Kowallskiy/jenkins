@@ -13,13 +13,13 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                bat 'pip install -r requirements.txt'
             }
         }
         stage('Run Tests') {
             steps {
                 echo 'Testing...'
-                sh 'pytest app/tests/test_main.py'
+                bat 'pytest app/tests/test_main.py'
             }
         }
         stage('Build Docker Image') {
@@ -33,29 +33,31 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
-                    sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                    bat 'echo %DOCKERHUB_PASSWORD% | docker login -u %DOCKERHUB_USERNAME% --password-stdin'
                 }
                 script {
                     docker.image(DOCKER_IMAGE).push()
                 }
-            }    
+            }
         }
         stage('Deploy to Kubernetes') {
             steps {
                 echo 'Deploying to Kubernetes...'
+                // Add Kubernetes deployment steps here
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
 
-post {
-    always {
-        cleanWs()
-    }
-    success {
-        echo 'Pipline completed successfully!'
-    }
-    failure {
-        echo 'Pipeline failed!'
-    }
-}
