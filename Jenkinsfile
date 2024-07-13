@@ -21,15 +21,15 @@ pipeline {
                 echo 'Finished verifying.'
             }
         }
-        stage('Install Dependencies') {
-            steps {
-                bat 'pip install -r requirements.txt'
-            }
+        // stage('Install Dependencies') {
+        //     steps {
+        //         bat 'pip install -r requirements.txt'
+        //     }
         }
         stage('Run Tests') {
             steps {
                 echo 'Testing...'
-                bat 'pytest app/tests/test_main.py'
+                bat 'C:/Users/user/AppData/Local/Programs/Python/Python312/Lib/site-packages/pytest/__main__.py C:/Users/user/Desktop/audio/app/test'
             }
         }
         stage('Build Docker Image') {
