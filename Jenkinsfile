@@ -16,8 +16,8 @@ pipeline {
             steps {
                 echo 'Start verifying...'
                 bat 'chcp 65001'  // Set code page to UTF-8 for Windows
-                bat 'python --version'
-                bat 'pip --version'
+                bat 'C:/Users/user/AppData/Local/Programs/Python/Python312/python.exe --version'
+                bat 'C:/Users/user/AppData/Local/Programs/Python/Python312/Scripts/pip --version'
                 echo 'Finished verifying.'
             }
         }
