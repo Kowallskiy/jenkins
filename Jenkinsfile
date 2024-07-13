@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "fake_calls_detection"
+        JAVA_OPTS = '-Dfile.encoding=UTF-8'
     }
 
     stages {
@@ -14,6 +15,7 @@ pipeline {
         stage('Verify the Environment') {
             steps {
                 echo 'Start verifying...'
+                bat 'chcp 65001'  // Set code page to UTF-8 for Windows
                 bat 'python --version'
                 bat 'pip --version'
                 echo 'Finished verifying.'
