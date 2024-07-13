@@ -25,7 +25,7 @@ pipeline {
         //     steps {
         //         bat 'pip install -r requirements.txt'
         //     }
-        }
+        // }
         stage('Run Tests') {
             steps {
                 echo 'Testing...'
