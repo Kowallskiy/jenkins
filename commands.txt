@@ -1,0 +1,94 @@
+1. Create an ECR repository if we do not have one
+aws ecr create-repository --repository-name fake-calls-detection
+
+2.Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 851725574163.dkr.ecr.us-east-1.amazonaws.com
+
+3. Build and push Docker image to ECR
+docker build -t fake-calls-detection .
+docker tag fake-calls-detection:latest 851725574163.dkr.ecr.us-east-1.amazonaws.com/fake-calls-detection:latest
+docker push 851725574163.dkr.ecr.us-east-1.amazonaws.com/fake-calls-detection:latest
+
+4. Create ECS cluster
+aws ecs create-cluster --cluster-name my-cluster
+
+5. Create task-definition.json
+
+6. Register the task definition. To push changes in taks-definition run this command:
+aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+7. Create ECS service
+aws ecs create-service \
+  --cluster my-cluster \
+  --service-name my-fastapi-service \
+  --task-definition my-fastapi-app \
+  --desired-count 1 \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[subnet-0dcd2d36d50417a18],securityGroups=[sg-0e8eb37a4546be6c7], assignPublicIp=ENABLED}" \
+  --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:851725574163:targetgroup/my-target-group/4dca93885dba805c,containerName=my-fastapi-app,containerPort=8000" \
+  --platform-version LATEST
+
+Let us make it a one-liner:
+aws ecs create-service --cluster my-cluster --service-name fake-calls-service --task-definition fake-calls-detection --desired-count 1 --launch-type EC2 --region us-east-1 --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:851725574163:targetgroup/my-target/d4a26d2d3ab4ccfd,containerName=fake-calls-detection,containerPort=8000"
+
+
+Additional information:
+1. We create load balancers in EC2
+
+2. If I change the task definition and want to update it for already existing ECS, I need to:
+    1. Register the task definition (6)
+    2. Update the task definition for the service:
+    aws ecs update-service --cluster your-cluster-name --service your-service-name --task-definition your-task-family
+    aws ecs update-service --cluster my-cluster --service my-fastapi-service --task-definition my-fastapi-app
+
+EC2 Instance
+
+1. Connect to the EC2 Instance we just created to download necessary dependencies and connect the instance to the ECS.
+
+The key.pem we generate while creating the instance. The public ip is Public IPv4 address. It must be enabled while creating the instance.
+If it does not allow us to enable the IPv4, then there must be an issue with the subnet. We need to go to the subnet,
+click on it, press Actions and Edit subnet settings. There you will see Enable auto-assign public IPv4 address. Click on that.
+
+ssh -i f.pem ec2-user@34.207.254.240
+
+2. Update the instance
+
+sudo yum update -y
+
+3. Install Docker
+
+sudo amazon-linux-extras install docker -y
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+
+4. Install ECS Init 
+
+sudo amazon-linux-extras install ecs -y
+
+5. Configure ECS Agent
+
+echo ECS_CLUSTER=my-cluster | sudo tee -a /etc/ecs/ecs.config
+
+6. Start the ECS Agent
+
+sudo service ecs start
+
+_______
+We can check the logs by using this command:
+sudo cat /var/log/ecs/ecs-agent.log
+
+To check ECS config file:
+sudo cat /etc/ecs/ecs.config
+The output should be ECS_CLUSTER=my-cluster
+
+Manually restart ECS Agent:
+sudo systemctl restart ecs
+
+To check memory usage:
+free -m
+
+If you do not see the EC2 instance in the ECS cluster, then here is the set of commands to use:
+
+sudo systemctl stop ecs
+sudo rm -rf /var/lib/ecs/data/*
+sudo systemctl restart ecs
