@@ -1,6 +1,6 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 import sounddevice as sd
 import numpy as np
 import librosa
@@ -12,8 +12,24 @@ import logging
 from typing import List
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+@app.get("/", response_class=HTMLResponse)
+async def get(request: Request):
+    logger.info("Saving the index page")
+    with open("app/templates/index.html") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content, status_code=200)
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+# @app.get("/")
+# def read_root():
+#     return {"status": "ok"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -72,7 +88,7 @@ async def audio_callback(indata, frames, time, status):
 
     audio_data = indata[:, 0]
     print(f"Audio data: {audio_data[:10]}... (length: {len(audio_data)})")
-    logging.info(f"Audio data: {audio_data[:10]}... (length: {len(audio_data)})")
+    logger.info(f"Audio data: {audio_data[:10]}... (length: {len(audio_data)})")
     
     features = extract_features(audio_data)
     features = features.reshape(1, -1)
@@ -80,12 +96,12 @@ async def audio_callback(indata, frames, time, status):
     is_fake = prediction[0]
 
     print(f"Prediction: {is_fake}")
-    logging.info(f"Prediction: {is_fake}")
+    logger.info(f"Prediction: {is_fake}")
 
     result = 'fake' if is_fake else 'real'
     
     print(f"Detected {result} audio")
-    logging.info(f"Detected {result} audio")
+    logger.info(f"Detected {result} audio")
 
     await manager.send_message(result)
 
@@ -94,12 +110,12 @@ def detect_fake_audio():
     try:
         with sd.InputStream(callback=lambda indata, frames, time, status: asyncio.run(audio_callback(indata, frames, time, status)), channels=1, samplerate=sample_rate, blocksize=int(sample_rate * duration)):
             print("Listening...")
-            logging.info("Listening...")
+            logger.info("Listening...")
             while is_detecting:
                 sd.sleep(duration * 1000)
     except Exception as e:
         print(f"Exception: {str(e)}")
-        logging.info(f"Exception: {str(e)}")
+        logger.info(f"Exception: {str(e)}")
 
 @app.post("/start_detection")
 async def start_detection():
