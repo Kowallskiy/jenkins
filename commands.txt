@@ -49,7 +49,7 @@ The key.pem we generate while creating the instance. The public ip is Public IPv
 If it does not allow us to enable the IPv4, then there must be an issue with the subnet. We need to go to the subnet,
 click on it, press Actions and Edit subnet settings. There you will see Enable auto-assign public IPv4 address. Click on that.
 
-ssh -i f.pem ec2-user@34.207.254.240
+ssh -i f.pem ec2-user@54.158.131.238
 
 2. Update the instance
 
@@ -92,3 +92,18 @@ If you do not see the EC2 instance in the ECS cluster, then here is the set of c
 sudo systemctl stop ecs
 sudo rm -rf /var/lib/ecs/data/*
 sudo systemctl restart ecs
+
+
+
+aws elbv2 describe-target-health --region us-east-1 --target-group-arn arn:aws:elasticloadbalancing:us-east-1:851725574163:targetgroup/my-target/d4a26d2d3ab4ccfd
+
+_______
+To list running containers:
+sudo docker ps
+
+To check logs of a specific container:
+sudo docker logs <container_id>
+
+To inspect port mappings of a container:
+sudo docker inspect <container_id>
+
