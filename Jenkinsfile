@@ -30,7 +30,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Testing...'
-                bat 'C:/Users/user/AppData/Local/Programs/Python/Python312/Lib/site-packages/pytest C:/Users/user/Desktop/audio/app/test'
+                bat 'C:/Users/user/AppData/Local/Programs/Python/Python312/python.exe -m pytest C:/Users/user/Desktop/audio/app/test'
             }
         }
         stage('Build Docker Image') {
