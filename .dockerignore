@@ -10,3 +10,7 @@ audio_files/
 tabular_dataset.csv
 train_documented.ipynb
 train.ipynb
+commands.txt
+f.pem
+task-definition.json
+Jenkinsfile
