@@ -1,0 +1,31 @@
+{
+    "family": "fake-calls-detection",
+    "requiresCompatibilities": ["EC2"],
+    "executionRoleArn": "arn:aws:iam::8:role/ecs",
+    "networkMode": "bridge",
+    "containerDefinitions": [
+        {
+            "name": "fake-calls-detection",
+            "image": "8.dkr.ecr.us-east-1.amazonaws.com/fake-calls-detection:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8001,
+                    "protocol": "tcp"
+                }
+            ],
+            "command": ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/fake-calls-detection",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}
